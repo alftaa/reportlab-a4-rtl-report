@@ -46,7 +46,7 @@ try:
     )
 except Exception:
     # احتياط: إعداد افتراضي إن لم يتوفر الملف بعد
-    reshaper = arabic_reshaper.ArabicReshaper(arabic_reshaper.DEFAULT_CONFIG)
+    reshaper = arabic_reshaper.ArabicReshaper(arabic_reshaper.config_for_true_type_font(font_path))
 
 def rtl(text: str) -> str:
     if text is None:
