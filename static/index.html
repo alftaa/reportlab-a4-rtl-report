@@ -251,7 +251,6 @@ thead th{ position:sticky; top:0; z-index:1 }
         name: tr.children[1].textContent.trim(),
         reason: tr.children[2].textContent.trim(),
       }));
-      if(rows.length === 0){ alert('أضف صفًا واحدًا على الأقل'); return; }
 
       const fd = new FormData();
       fd.append('rows_json', JSON.stringify(rows));
