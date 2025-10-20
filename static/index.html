@@ -8,132 +8,69 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* ---------- Design tokens ---------- */
+    /* ===== أساسيات (Mobile‑first) ===== */
     :root{
-      --radius: 14px;
-      --shadow: 0 10px 25px rgba(0,0,0,.08);
-      --line: rgba(0,0,0,.08);
-      --muted: #6b7280;
-      --brand: #1d4ed8;
-      --danger:#dc2626;
+      --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#f8fafc; --card:#ffffff;
+      --brand:#3b82f6; --ok:#10b981; --danger:#ef4444; --chip:#eef2ff; --chipText:#1e3a8a;
+      --shadow:0 10px 24px rgba(0,0,0,.06);
+      --radius:14px;
     }
-
-    *{box-sizing:border-box}
+    *,*::before,*::after{box-sizing:border-box}
     html,body{height:100%}
-    body{
-      margin:0; font-family:'Cairo',system-ui,Segoe UI,Arial,sans-serif;
-      color:var(--ink);
-      transition: background .6s ease, color .6s ease;
-      overflow-x:hidden;
-    }
+    body{margin:0;font-family:'Cairo',system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink);}
 
-    /* Sky background layer */
-    .sky{ position:fixed; inset:0; z-index:-1; transition:1s ease background; }
+    /* خلفية صباح/مساء هادئة */
+    body[data-theme="morning"]{background:linear-gradient(180deg,#e0f2ff,#f8fbff)}
+    body[data-theme="evening"]{background:linear-gradient(180deg,#0b1020,#1c1530);color:#eef2ff}
+    body[data-theme="evening"] .card{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+    body[data-theme="evening"] .muted{color:#c7d2fe}
 
-    /* Morning theme */
-    body[data-theme="morning"]{ --ink:#0f172a; }
-    body[data-theme="morning"] .sky{
-      background: linear-gradient(180deg,#cfefff 0%,#eaf7ff 45%,#ffffff 100%);
-    }
-    body[data-theme="morning"] .sun{
-      position:absolute; width:140px; height:140px; border-radius:50%;
-      background: radial-gradient(circle at 35% 35%, #fff7b1, #ffd673 60%, #ffc04d 100%);
-      right:8vw; top:8vh; filter: blur(.2px);
-      box-shadow: 0 0 60px 20px rgba(255,200,70,.35);
-    }
+    .page{max-width:680px; margin-inline:auto; padding:16px 14px 24px}
+    h1{margin:10px 0 4px; font-size:clamp(22px, 4vw, 28px)}
+    .muted{color:var(--muted)}
 
-    /* Evening theme */
-    body[data-theme="evening"]{ --ink:#e5e7eb; }
-    body[data-theme="evening"] .sky{
-      background: radial-gradient(1200px 700px at 70% -10%, #3b1c6b 0%, #1a1038 45%, #0b0f25 100%);
-    }
-    body[data-theme="evening"] .stars{ position:absolute; inset:0; }
-    .star{ position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; opacity:.9 }
+    .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow)}
 
-    /* Layout */
-    .wrap{ max-width:900px; margin:auto; padding:28px 16px 56px; }
-    .header{ text-align:center; margin-bottom:16px }
-    .title{ margin:0; font-size:28px; font-weight:700 }
-    .greet{ margin:6px 0 14px; font-size:16px; color:var(--muted); font-weight:700 }
+    /* صف الإدخال (Mobile‑first: عمود واحد) */
+    .row{display:grid; grid-template-columns:1fr; gap:10px}
+    @media (min-width:560px){ .row{grid-template-columns:1fr 1fr auto} }
 
-    .panel{ background:#ffffffb3; backdrop-filter: blur(6px);
-            border:1px solid var(--line); border-radius:var(--radius);
-            box-shadow:var(--shadow); padding:16px }
-    body[data-theme="evening"] .panel{ background:#0f1221cc; border-color:rgba(255,255,255,.08) }
+    label{font-size:14px; color:var(--muted); margin-bottom:6px; display:block}
+    input[type="text"]{width:100%; padding:14px; border:1px solid var(--line); border-radius:12px; font:inherit}
 
-    .grid{ display:grid; gap:10px }
-    @media(min-width:760px){ .grid-3{ grid-template-columns: 1.4fr 1.4fr .9fr } }
+    /* أزرار: توحيد الخط = نفس خط الصفحة */
+    .btn{appearance:none; border:0; border-radius:12px; padding:14px 16px; cursor:pointer; font-family:inherit; font-weight:700; line-height:1; 
+         transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease; min-height:48px;}
+    .btn:active{transform:translateY(1px)}
+    .btn-ghost{background:#fff; border:1px solid var(--line)}
+    .btn-primary{background:var(--brand); color:#fff; box-shadow:0 8px 18px rgba(59,130,246,.22)}
+    /* زر التصدير المطلوب: أخضر */
+    .btn-success{background:var(--ok); color:#fff; box-shadow:0 8px 18px rgba(16,185,129,.22)}
+    .btn-danger{background:var(--danger); color:#fff}
+    body[data-theme="evening"] .btn-ghost{background:transparent; color:#eef2ff; border-color:rgba(255,255,255,.12)}
 
-    label{ font-size:13px; color:var(--muted); display:block; margin-bottom:6px }
-    input[type="text"]{ width:100%; padding:12px 12px; border:1px solid var(--line);
-      border-radius:12px; background:#fff; font:inherit }
-    body[data-theme="evening"] input[type="text"]{ background:#151935; color:#e5e7eb; border-color:rgba(255,255,255,.08) }
+    .list{margin-top:12px; display:grid; gap:8px}
+    .item{display:flex; gap:10px; align-items:center; justify-content:space-between; border:1px dashed var(--line); border-radius:12px; padding:12px; background:#fff}
+    body[data-theme="evening"] .item{background:rgba(255,255,255,.04)}
+    .item b{font-weight:700}
+    .item small{color:var(--muted)}
 
-    .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center }
-    $1
-    .btn-sm{ padding:6px 10px; font-size:12px }
-    .btn-primary{ background:var(--brand); color:#fff }
-    .btn-ghost{ background:transparent; border:1px solid var(--line); color:inherit }
-    .btn-danger{ background:var(--danger); color:#fff }
+    .footer-actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-top:14px}
+    .hint{font-size:13px}
 
-    table{ width:100%; border-collapse:separate; border-spacing:0; margin-top:10px; background:#fff; border-radius:12px; overflow:hidden; border:1px solid var(--line); box-shadow: var(--shadow) }
-/* friendlier rows & hover */
-tbody tr+tr td{ border-top:1px solid rgba(0,0,0,.06) }
-tbody tr:hover{ background:#f9fafb; transition:background .2s ease }
-tbody tr:nth-child(even){ background:#fbfdff }
-/* dark theme adjustments */
-body[data-theme="evening"] tbody tr+tr td{ border-top:1px solid #2a2f55 }
-body[data-theme="evening"] tbody tr:hover{ background:#171b36 }
-body[data-theme="evening"] tbody tr:nth-child(even){ background:#12162e }
-/* sticky header */
-thead th{ position:sticky; top:0; z-index:1 }
-    body[data-theme="evening"] table{ background:#0f1221 }
-    th,td{ padding:12px 14px; vertical-align:top; border:none }
-    th{ background:#f3f4f6 }
-    body[data-theme="evening"] th{ background:#1b1f3b; color:#e5e7eb; border-color:#2a2f55 }
-    body[data-theme="evening"] td{ border-color:#2a2f55; color:#e5e7eb }
+    .chip{display:inline-flex; align-items:center; gap:8px; background:var(--chip); color:var(--chipText); padding:8px 12px; border-radius:999px; font-size:13px}
+    body[data-theme="evening"] .chip{background:#312e81; color:#c7d2fe}
 
-    .right{text-align:right} .center{text-align:center}
-
-    .footer-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:12px }
-    .hint{ font-size:12px; color:var(--muted) }
-  
-    /* --- Buttons polish overrides --- */
-    .btn{ appearance:none; border:1px solid var(--line); border-radius:14px; padding:12px 16px; cursor:pointer; font-weight:700; background:#fff; transition:all .15s ease; box-shadow:0 2px 0 rgba(0,0,0,.04) }
-    .btn:hover{ transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,.08) }
-    .btn:active{ transform:translateY(0); box-shadow:0 2px 0 rgba(0,0,0,.04) }
-    .btn:focus-visible{ outline:0; box-shadow:0 0 0 3px rgba(29,78,216,.25) }
-    .btn[disabled]{ opacity:.6; cursor:not-allowed }
-
-    .btn-primary{ background:var(--brand); color:#fff; border-color:transparent; box-shadow:0 6px 14px rgba(29,78,216,.25) }
-    .btn-primary:hover{ filter:brightness(1.04) }
-    body[data-theme="evening"] .btn-primary{ box-shadow:0 6px 14px rgba(29,78,216,.35) }
-
-    .btn-ghost{ background:transparent; border:1px solid var(--line); color:inherit }
-    .btn-ghost:hover{ background:rgba(0,0,0,.03) }
-    body[data-theme="evening"] .btn-ghost{ border-color:rgba(255,255,255,.12); color:#e5e7eb }
-    body[data-theme="evening"] .btn-ghost:hover{ background:rgba(255,255,255,.06) }
-
-    .btn-danger{ background:var(--danger); color:#fff; border-color:transparent; box-shadow:0 6px 14px rgba(220,38,38,.25) }
-    .btn-danger:hover{ filter:brightness(1.04) }
-
-    .btn-sm{ padding:6px 10px; font-size:12px; border-radius:10px }
+    .hero{margin:8px 0 14px}
   </style>
 </head>
 <body>
-  <div class="sky">
-    <div class="sun" aria-hidden="true"></div>
-    <div class="stars" aria-hidden="true"></div>
-  </div>
+  <div class="page">
+    <h1>صانع تقارير الجولات</h1>
+    <div class="hero muted" id="greet"></div>
 
-  <div class="wrap">
-    <header class="header">
-      <h1 class="title">صانع تقارير الجولات</h1>
-      <div id="greet" class="greet"></div>
-    </header>
-
-    <section class="panel" style="margin-bottom:12px">
-      <div class="grid grid-3">
+    <div class="card">
+      <div class="row">
         <div>
           <label>اسم المعلمة</label>
           <input id="tName" type="text" placeholder="مثال: أمل الشريف" />
@@ -142,141 +79,114 @@ thead th{ position:sticky; top:0; z-index:1 }
           <label>سبب عدم الحضور</label>
           <input id="tReason" type="text" placeholder="مثال: انقطاع الإنترنت" />
         </div>
-        <div class="actions" style="align-items:flex-end">
+        <div style="display:flex;gap:8px;align-items:flex-end;justify-content:flex-end">
           <button class="btn btn-primary" id="addRow">+ إضافة</button>
-          <button class="btn btn-ghost" id="clear">مسح الكل</button>
         </div>
       </div>
 
-      <table id="tbl" aria-label="جدول المعلمات المتغيبات">
-        <thead>
-          <tr>
-            <th style="width:60px">م</th>
-            <th>اسم المعلمة</th>
-            <th>سبب عدم الحضور</th>
-            <th style="width:100px">إجراءات</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="list" id="list"></div>
 
       <div class="footer-actions">
-        <div class="hint">اليوم والتاريخ تُولَّد تلقائيًا داخل ملف الـ PDF.</div>
-        <div class="actions">
-          <button class="btn btn-primary" id="export">تصدير PDF</button>
+        <span class="chip" id="count">لا توجد متغيبات</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost" id="clear">مسح الكل</button>
+          <button class="btn btn-success" id="export">تصدير التقرير الآن</button>
         </div>
       </div>
-    </section>
+      <div class="hint muted" style="margin-top:6px">اليوم والتاريخ تُملأ تلقائيًا داخل الـ PDF. يمكنك التصدير بدون إضافة أسماء.</div>
+    </div>
   </div>
 
   <script>
-    // ---------- Theme & greeting ----------
+    // تحية تلقائية + سمة صباح/مساء
     (function(){
-      const now = new Date();
-      const hour = now.getHours();
-      const isMorning = hour >= 5 && hour < 17; // 5am → 4:59pm
-      document.body.setAttribute('data-theme', isMorning ? 'morning' : 'evening');
-
-      // Greeting
-      const greet = document.getElementById('greet');
-      greet.textContent = isMorning ? 'صباح الخير ابتسام ☀️' : 'مساء الخير ابتسام ✨';
-
-      // Visuals per theme
-      const sun = document.querySelector('.sun');
-      const starsLayer = document.querySelector('.stars');
-      if(isMorning){
-        sun.style.display = 'block';
-        starsLayer.innerHTML = '';
-      } else {
-        sun.style.display = 'none';
-        // generate simple stars
-        const count = 80;
-        const frag = document.createDocumentFragment();
-        for(let i=0;i<count;i++){
-          const s = document.createElement('div');
-          s.className = 'star';
-          s.style.left = Math.random()*100 + 'vw';
-          s.style.top  = Math.random()*100 + 'vh';
-          s.style.opacity = (0.6 + Math.random()*0.4).toFixed(2);
-          const size = Math.random()*.12 + 1.4; // 1.4px to 1.52px
-          s.style.width = size + 'px';
-          s.style.height = size + 'px';
-          frag.appendChild(s);
-        }
-        starsLayer.appendChild(frag);
-      }
+      const h = new Date().getHours();
+      const morning = h >= 5 && h < 17;
+      document.body.setAttribute('data-theme', morning ? 'morning' : 'evening');
+      document.getElementById('greet').textContent = morning ? 'صباح الخير ابتسام ☀️' : 'مساء الخير ابتسام 🌙';
     })();
 
-    // ---------- App logic ----------
     const $ = (s)=>document.querySelector(s);
-    const $$ = (s)=>Array.from(document.querySelectorAll(s));
+    const list = $('#list');
+    const tName = $('#tName');
+    const tReason = $('#tReason');
+    const countChip = $('#count');
 
-    function renumber(){
-      $('#tbl tbody').querySelectorAll('tr').forEach((tr,i)=>{
-        tr.querySelector('td').textContent = i+1;
-      })
+    function renderCount(){
+      const n = list.children.length;
+      countChip.textContent = n ? `عدد المتغيبات: ${n}` : 'لا توجد متغيبات';
     }
 
     function addRow(name, reason){
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="center"></td>
-        <td class="right"></td>
-        <td class="right"></td>
-        <td class="center"><button class="btn btn-danger btn-sm">حذف</button></td>`;
-      const tds = tr.querySelectorAll('td');
-      tds[1].textContent = name;
-      tds[2].textContent = reason;
-      tr.querySelector('button').onclick = ()=>{ tr.remove(); renumber(); };
-      $('#tbl tbody').appendChild(tr);
-      renumber();
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <b class="name"></b>
+            <small class="reason muted"></small>
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm">حذف</button>`;
+      el.querySelector('.name').textContent = name;
+      el.querySelector('.reason').textContent = `— ${reason}`;
+      el.querySelector('button').onclick = ()=>{ el.remove(); renderCount(); };
+      list.appendChild(el);
+      renderCount();
     }
 
-    $('#addRow').onclick = ()=>{
-      const name = $('#tName').value.trim();
-      const reason = $('#tReason').value.trim();
-      if(!name || !reason){ alert('فضلاً أدخل اسم المعلمة وسبب عدم الحضور'); return; }
+    function tryAdd(){
+      const name = tName.value.trim();
+      const reason = tReason.value.trim();
+      if(!name || !reason){
+        // تبسيط: من دون تنبيه مزعج — نوجه التركيز
+        if(!name) tName.focus(); else tReason.focus();
+        return;
+      }
       addRow(name, reason);
-      $('#tName').value = '';
-      $('#tReason').value = '';
-      $('#tName').focus();
-    };
+      tName.value = '';
+      tReason.value = '';
+      tName.focus();
+    }
+
+    $('#addRow').onclick = tryAdd;
+    tReason.addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryAdd(); });
+    tName.addEventListener('keydown', (e)=>{ if(e.key==='Enter') tReason.focus(); });
 
     $('#clear').onclick = ()=>{
-      if(confirm('مسح جميع الصفوف؟')){ $('#tbl tbody').innerHTML=''; }
+      if(!list.children.length) return;
+      if(confirm('مسح جميع المتغيبات؟')){ list.innerHTML=''; renderCount(); }
     };
 
     $('#export').onclick = async ()=>{
-      const rows = $$('#tbl tbody tr').map(tr=>({
-        name: tr.children[1].textContent.trim(),
-        reason: tr.children[2].textContent.trim(),
+      const rows = Array.from(list.children).map((el)=>({
+        name: el.querySelector('.name').textContent.trim(),
+        reason: el.querySelector('.reason').textContent.replace(/^—\s*/, '').trim(),
       }));
 
       const fd = new FormData();
       fd.append('rows_json', JSON.stringify(rows));
 
       const btn = $('#export');
-      btn.disabled = true; btn.textContent = 'جارٍ التصدير...';
+      const label = btn.textContent;
+      btn.disabled = true; btn.textContent = 'جارٍ إنشاء التقرير…';
+
+      // دعم التشغيل من :3000 أو :8000
+      const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') && (location.port === '3000')
+        ? 'http://127.0.0.1:8000' : '';
+
       try{
-        const res = await fetch('/api/pdf', { method:'POST', body: fd });
-        if(!res.ok){
-          const err = await res.text();
-          alert('فشل إنشاء PDF: ' + err);
-          return;
-        }
+        const res = await fetch(`${API_BASE}/api/pdf`, { method:'POST', body: fd });
+        if(!res.ok){ throw new Error(await res.text()); }
         const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `تقرير_الجولات_${Date.now()}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        const url = URL.createObjectURL(blob);
+        a.href = url; a.download = `تقرير_الجولات_${Date.now()}.pdf`;
+        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
       }catch(e){
-        alert('خطأ في الاتصال بالخادم');
+        alert('تعذر إنشاء PDF');
       }finally{
-        btn.disabled = false; btn.textContent = 'تصدير PDF';
+        btn.disabled = false; btn.textContent = label;
       }
     };
   </script>
