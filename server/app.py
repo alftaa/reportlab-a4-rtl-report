@@ -119,10 +119,7 @@ def draw_header_footer(canvas, doc, header_right_lines,
         except Exception:
             pass
 
-    # Footer signature — أكثر وضوحًا وأعلى من الأسفل بمسافة واضحة
-    canvas.setFont(font_bold, 15)
-    signature_y = 26 * mm  # مرفوعة عن أسفل الصفحة ~ 2.6 سم
-    canvas.drawRightString(page_w - margin, signature_y, rtl("إعداد مساعد الإداري / ابتسام الفيفي"))
+    # (moved) التوقيع يُضاف داخل محتوى القصة أسفل فقرة الختام، وليس في التذييل الثابت
 
 
 # ---------------- utils ---------------- #
@@ -163,6 +160,8 @@ def build_pdf(rows: List[Tuple[str, str]]) -> bytes:
         spaceBefore=0,
     )
     style_small = ParagraphStyle(name="ArabicSmall", parent=style_ar, fontSize=11, leading=16)
+    # نمط التوقيع (أوضح وأكبر)
+    style_sig = ParagraphStyle(name="ArabicSignature", parent=style_ar, fontName=font_bold, fontSize=15, leading=20, alignment=TA_RIGHT)
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -219,6 +218,9 @@ def build_pdf(rows: List[Tuple[str, str]]) -> bytes:
     story.append(Spacer(1, 6 * mm))
     story.append(Paragraph(rtl("*لوحظ الانضباط في دخول الحصص"), style_ar))
     story.append(Paragraph(rtl("ختامًا أرجو قبول التقرير ولكم جزيل الشكر"), style_ar))
+    # مسافة كبيرة ثم التوقيع مباشرة تحت الختام
+    story.append(Spacer(1, 25 * mm))
+    story.append(Paragraph(rtl("إعداد مساعد الإداري / ابتسام الفيفي"), style_sig))
 
     header_right_lines = [
         "وزارة التعليم",
