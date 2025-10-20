@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>مولّد تقرير الجولات (ReportLab A4/RTL)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --bg:#f8fafc; --card:#ffffff; --brand:#1d4ed8; --danger:#dc2626; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Cairo',system-ui,Segoe UI,Arial,sans-serif;background:#f8fafc;color:var(--ink)}
+    .wrap{max-width:960px;margin:24px auto;padding:16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+    .grid{display:grid;gap:12px}
+    @media (min-width:768px){.grid-3{grid-template-columns:repeat(3,1fr)}}
+    label{font-size:14px;color:var(--muted);display:block;margin-bottom:6px}
+    input[type="text"]{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit}
+    .btn{appearance:none;border:0;border-radius:10px;padding:12px 14px;cursor:pointer;font-weight:700}
+    .btn-primary{background:var(--brand);color:#fff}
+    .btn-ghost{background:#fff;border:1px solid var(--line)}
+    .btn-danger{background:var(--danger);color:#fff}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{border:1px solid #000;padding:6px 8px;vertical-align:top}
+    th{background:#f3f4f6}
+    .right{ text-align:right }
+    .center{ text-align:center }
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .hint{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2 style="margin:0 0 12px 0">مولّد تقرير الجولات (ReportLab A4/RTL)</h2>
+
+    <div class="card" style="margin-bottom:12px">
+      <strong>إضافة المعلمات المتغيبات</strong>
+      <div class="grid grid-3" style="margin-top:10px">
+        <div>
+          <label>اسم المعلمة</label>
+          <input id="tName" type="text" placeholder="مثال: أمل الشريف" />
+        </div>
+        <div>
+          <label>سبب عدم الحضور</label>
+          <input id="tReason" type="text" placeholder="مثال: انقطاع الإنترنت" />
+        </div>
+        <div class="actions" style="align-items:flex-end">
+          <button class="btn btn-primary" id="addRow">+ إضافة</button>
+          <button class="btn btn-ghost" id="clear">مسح الكل</button>
+        </div>
+      </div>
+
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th style="width:60px">م</th>
+            <th>اسم المعلمة</th>
+            <th>سبب عدم الحضور</th>
+            <th style="width:100px">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="hint" style="margin-top:8px">اليوم والتاريخ يُولَّدان تلقائيًا داخل الـ PDF — لا حاجة لأي إدخال.</div>
+    </div>
+
+    <div class="actions" style="justify-content:space-between">
+      <div class="hint">سيُنشئ الخادم PDF باستخدام ReportLab بمقاس A4 ودعم RTL.</div>
+      <div>
+        <button class="btn btn-primary" id="export">تصدير PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (s)=>document.querySelector(s);
+    const $$ = (s)=>Array.from(document.querySelectorAll(s));
+
+    function renumber(){
+      $('#tbl tbody').querySelectorAll('tr').forEach((tr,i)=>{
+        tr.querySelector('td').textContent = i+1;
+      })
+    }
+
+    function addRow(name, reason){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="center"></td>
+        <td class="right"></td>
+        <td class="right"></td>
+        <td class="center"><button class="btn btn-danger btn-sm">حذف</button></td>`;
+      const tds = tr.querySelectorAll('td');
+      tds[1].textContent = name;
+      tds[2].textContent = reason;
+      tr.querySelector('button').onclick = ()=>{ tr.remove(); renumber(); };
+      $('#tbl tbody').appendChild(tr);
+      renumber();
+    }
+
+    $('#addRow').onclick = ()=>{
+      const name = $('#tName').value.trim();
+      const reason = $('#tReason').value.trim();
+      if(!name || !reason){ alert('فضلاً أدخل اسم المعلمة وسبب عدم الحضور'); return; }
+      addRow(name, reason);
+      $('#tName').value = '';
+      $('#tReason').value = '';
+      $('#tName').focus();
+    };
+
+    $('#clear').onclick = ()=>{
+      if(confirm('مسح جميع الصفوف؟')){ $('#tbl tbody').innerHTML=''; }
+    };
+
+    $('#export').onclick = async ()=>{
+      const rows = $$('#tbl tbody tr').map(tr=>({
+        name: tr.children[1].textContent.trim(),
+        reason: tr.children[2].textContent.trim(),
+      }));
+      if(rows.length === 0){ alert('أضف صفًا واحدًا على الأقل'); return; }
+
+      const fd = new FormData();
+      fd.append('rows_json', JSON.stringify(rows));
+
+      const btn = $('#export');
+      btn.disabled = true; btn.textContent = 'جارٍ التصدير...';
+      try{
+        const res = await fetch('/api/pdf', { method:'POST', body: fd });
+        if(!res.ok){
+          const err = await res.text();
+          alert('فشل إنشاء PDF: ' + err);
+          return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `تقرير_الجولات_${Date.now()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }catch(e){
+        alert('خطأ في الاتصال بالخادم');
+      }finally{
+        btn.disabled = false; btn.textContent = 'تصدير PDF';
+      }
+    };
+  </script>
+</body>
+</html>
