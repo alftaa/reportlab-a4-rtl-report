@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 import io, os, json
@@ -45,8 +44,10 @@ try:
         arabic_reshaper.config_for_true_type_font(FONT_REGULAR_PATH)
     )
 except Exception:
-    # احتياط: إعداد افتراضي إن لم يتوفر الملف بعد
-    reshaper = arabic_reshaper.ArabicReshaper(arabic_reshaper.config_for_true_type_font(font_path))
+    # احتياط: إن لم يتوفر الملف لأي سبب
+    reshaper = arabic_reshaper.ArabicReshaper(
+        arabic_reshaper.config_for_true_type_font(FONT_REGULAR_PATH)
+    )
 
 def rtl(text: str) -> str:
     if text is None:
@@ -76,13 +77,15 @@ def ensure_fonts(regular_path: str, bold_path: Optional[str]) -> tuple[str, str]
 
 # ---------------- Header/Footer drawing ---------------- #
 
-def draw_header_footer(canvas, doc, header_right_lines, center_logo_path: Optional[str], left_logo_path: Optional[str], font_name: str):
+def draw_header_footer(canvas, doc, header_right_lines,
+                       center_logo_path: Optional[str], left_logo_path: Optional[str],
+                       font_regular: str, font_bold: str):
     page_w, page_h = A4
     margin = 15 * mm
     top_y = page_h - margin
 
-    # Right header text (3 lines)
-    canvas.setFont(font_name, 9)
+    # Right header text (multi lines)
+    canvas.setFont(font_regular, 9)
     y = top_y - 4
     for line in header_right_lines:
         canvas.drawRightString(page_w - margin, y, rtl(line))
@@ -116,9 +119,10 @@ def draw_header_footer(canvas, doc, header_right_lines, center_logo_path: Option
         except Exception:
             pass
 
-    # Footer signature (bottom-right)
-    canvas.setFont(font_name, 11)
-    canvas.drawRightString(page_w - margin, margin - 1 + 5, rtl("إعداد مساعد الإداري / ابتسام الفيفي"))
+    # Footer signature — أكثر وضوحًا وأعلى من الأسفل بمسافة واضحة
+    canvas.setFont(font_bold, 15)
+    signature_y = 26 * mm  # مرفوعة عن أسفل الصفحة ~ 2.6 سم
+    canvas.drawRightString(page_w - margin, signature_y, rtl("إعداد مساعد الإداري / ابتسام الفيفي"))
 
 
 # ---------------- utils ---------------- #
@@ -167,7 +171,7 @@ def build_pdf(rows: List[Tuple[str, str]]) -> bytes:
         rightMargin=15 * mm,
         leftMargin=15 * mm,
         topMargin=60 * mm,
-        bottomMargin=20 * mm,
+        bottomMargin=40 * mm,  # نزود المسافة السفلية حتى لا يتصادم المحتوى مع التوقيع المرتفع
         title=rtl("تقرير الجولات"),
         author=rtl("ابتسام الفيفي"),
         subject=rtl("تقرير الجولات"),
@@ -186,26 +190,29 @@ def build_pdf(rows: List[Tuple[str, str]]) -> bytes:
     story.append(Paragraph(lead_html, style_ar))
     story.append(Spacer(1, 6 * mm))
 
-    data = [[rtl("م"), rtl("اسم المعلمة"), rtl("سبب عدم الحضور")]]
+    # ==== جدول معكوس الأعمدة ====
+    # قبل: ["م", "اسم المعلمة", "سبب عدم الحضور"]
+    # الآن (معكوس): ["سبب عدم الحضور", "اسم المعلمة", "م"]
+    data = [[rtl("سبب عدم الحضور"), rtl("اسم المعلمة"), rtl("م")]]
     for i, (name, reason) in enumerate(rows, start=1):
         data.append([
-            Paragraph(rtl(str(i)), style_small),
-            Paragraph(rtl(name), style_small),
             Paragraph(rtl(reason), style_small),
+            Paragraph(rtl(name), style_small),
+            Paragraph(rtl(str(i)), style_small),
         ])
 
-    col_widths = [14 * mm, 70 * mm, 90 * mm]
+    col_widths = [90 * mm, 70 * mm, 14 * mm]  # أعرض سبب، ثم الاسم، ثم رقم صغير
     tbl = Table(data, colWidths=col_widths, hAlign='RIGHT')
     tbl.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 1, colors.black),
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor('#f3f4f6')),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+        ("ALIGN", (0, 0), (-1, -1), "RIGHT"),          # محاذاة عامة لليمين
         ("FONT", (0, 0), (-1, -1), font_regular),
         ("FONTSIZE", (0, 0), (-1, 0), 12),
         ("FONTSIZE", (0, 1), (-1, -1), 11),
-        ("ALIGN", (0, 1), (0, -1), "CENTER"),
         ("LEADING", (0, 0), (-1, -1), 14),
+        ("ALIGN", (-1, 1), (-1, -1), "CENTER"),        # محاذاة عمود الرقم (آخر عمود) للوسط
     ]))
 
     story.append(tbl)
@@ -221,7 +228,9 @@ def build_pdf(rows: List[Tuple[str, str]]) -> bytes:
     ]
 
     def on_page(canvas, doc_obj):
-        draw_header_footer(canvas, doc_obj, header_right_lines, CENTER_LOGO_PATH, LEFT_LOGO_PATH, font_regular)
+        draw_header_footer(canvas, doc_obj, header_right_lines,
+                           CENTER_LOGO_PATH, LEFT_LOGO_PATH,
+                           font_regular, font_bold)
 
     doc.build(story, onFirstPage=on_page, onLaterPages=on_page)
     pdf_bytes = buf.getvalue()
