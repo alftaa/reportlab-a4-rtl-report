@@ -180,8 +180,8 @@ def build_pdf(rows: List[Tuple[str, str]]) -> bytes:
     "وبناءً عليه، تم تكليفي بتنفيذ الجولات خلال الحصة الرابعة عبر منصة مدرستي، وذلك من قبل مديرة المدرسة: ابتسام محمد القرني.",
     ]
     
-    lead_html = "<br/>".join(rtl(l) for l in lines)
-    story.append(Paragraph(lead_html, style_ar))
+    for l in lines:
+        story.append(Paragraph(rtl(l), style_ar))
     story.append(Spacer(1, 6 * mm))
 
     # ==== جدول معكوس الأعمدة — يُنشأ فقط إذا كانت هناك صفوف ====
