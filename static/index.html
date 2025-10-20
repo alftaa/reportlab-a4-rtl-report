@@ -3,40 +3,137 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>مولّد تقرير الجولات (ReportLab A4/RTL)</title>
+  <title>صانع تقارير الجولات</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    :root{ --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --bg:#f8fafc; --card:#ffffff; --brand:#1d4ed8; --danger:#dc2626; }
+    /* ---------- Design tokens ---------- */
+    :root{
+      --radius: 14px;
+      --shadow: 0 10px 25px rgba(0,0,0,.08);
+      --line: rgba(0,0,0,.08);
+      --muted: #6b7280;
+      --brand: #1d4ed8;
+      --danger:#dc2626;
+    }
+
     *{box-sizing:border-box}
-    body{margin:0;font-family:'Cairo',system-ui,Segoe UI,Arial,sans-serif;background:#f8fafc;color:var(--ink)}
-    .wrap{max-width:960px;margin:24px auto;padding:16px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
-    .grid{display:grid;gap:12px}
-    @media (min-width:768px){.grid-3{grid-template-columns:repeat(3,1fr)}}
-    label{font-size:14px;color:var(--muted);display:block;margin-bottom:6px}
-    input[type="text"]{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit}
-    .btn{appearance:none;border:0;border-radius:10px;padding:12px 14px;cursor:pointer;font-weight:700}
-    .btn-primary{background:var(--brand);color:#fff}
-    .btn-ghost{background:#fff;border:1px solid var(--line)}
-    .btn-danger{background:var(--danger);color:#fff}
-    table{width:100%;border-collapse:collapse;margin-top:8px}
-    th,td{border:1px solid #000;padding:6px 8px;vertical-align:top}
-    th{background:#f3f4f6}
-    .right{ text-align:right }
-    .center{ text-align:center }
-    .actions{display:flex;gap:8px;flex-wrap:wrap}
-    .hint{font-size:12px;color:var(--muted)}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:'Cairo',system-ui,Segoe UI,Arial,sans-serif;
+      color:var(--ink);
+      transition: background .6s ease, color .6s ease;
+      overflow-x:hidden;
+    }
+
+    /* Sky background layer */
+    .sky{ position:fixed; inset:0; z-index:-1; transition:1s ease background; }
+
+    /* Morning theme */
+    body[data-theme="morning"]{ --ink:#0f172a; }
+    body[data-theme="morning"] .sky{
+      background: linear-gradient(180deg,#cfefff 0%,#eaf7ff 45%,#ffffff 100%);
+    }
+    body[data-theme="morning"] .sun{
+      position:absolute; width:140px; height:140px; border-radius:50%;
+      background: radial-gradient(circle at 35% 35%, #fff7b1, #ffd673 60%, #ffc04d 100%);
+      right:8vw; top:8vh; filter: blur(.2px);
+      box-shadow: 0 0 60px 20px rgba(255,200,70,.35);
+    }
+
+    /* Evening theme */
+    body[data-theme="evening"]{ --ink:#e5e7eb; }
+    body[data-theme="evening"] .sky{
+      background: radial-gradient(1200px 700px at 70% -10%, #3b1c6b 0%, #1a1038 45%, #0b0f25 100%);
+    }
+    body[data-theme="evening"] .stars{ position:absolute; inset:0; }
+    .star{ position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; opacity:.9 }
+
+    /* Layout */
+    .wrap{ max-width:900px; margin:auto; padding:28px 16px 56px; }
+    .header{ text-align:center; margin-bottom:16px }
+    .title{ margin:0; font-size:28px; font-weight:700 }
+    .greet{ margin:6px 0 14px; font-size:16px; color:var(--muted); font-weight:700 }
+
+    .panel{ background:#ffffffb3; backdrop-filter: blur(6px);
+            border:1px solid var(--line); border-radius:var(--radius);
+            box-shadow:var(--shadow); padding:16px }
+    body[data-theme="evening"] .panel{ background:#0f1221cc; border-color:rgba(255,255,255,.08) }
+
+    .grid{ display:grid; gap:10px }
+    @media(min-width:760px){ .grid-3{ grid-template-columns: 1.4fr 1.4fr .9fr } }
+
+    label{ font-size:13px; color:var(--muted); display:block; margin-bottom:6px }
+    input[type="text"]{ width:100%; padding:12px 12px; border:1px solid var(--line);
+      border-radius:12px; background:#fff; font:inherit }
+    body[data-theme="evening"] input[type="text"]{ background:#151935; color:#e5e7eb; border-color:rgba(255,255,255,.08) }
+
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center }
+    $1
+    .btn-sm{ padding:6px 10px; font-size:12px }
+    .btn-primary{ background:var(--brand); color:#fff }
+    .btn-ghost{ background:transparent; border:1px solid var(--line); color:inherit }
+    .btn-danger{ background:var(--danger); color:#fff }
+
+    table{ width:100%; border-collapse:separate; border-spacing:0; margin-top:10px; background:#fff; border-radius:12px; overflow:hidden; border:1px solid var(--line); box-shadow: var(--shadow) }
+/* friendlier rows & hover */
+tbody tr+tr td{ border-top:1px solid rgba(0,0,0,.06) }
+tbody tr:hover{ background:#f9fafb; transition:background .2s ease }
+tbody tr:nth-child(even){ background:#fbfdff }
+/* dark theme adjustments */
+body[data-theme="evening"] tbody tr+tr td{ border-top:1px solid #2a2f55 }
+body[data-theme="evening"] tbody tr:hover{ background:#171b36 }
+body[data-theme="evening"] tbody tr:nth-child(even){ background:#12162e }
+/* sticky header */
+thead th{ position:sticky; top:0; z-index:1 }
+    body[data-theme="evening"] table{ background:#0f1221 }
+    th,td{ padding:12px 14px; vertical-align:top; border:none }
+    th{ background:#f3f4f6 }
+    body[data-theme="evening"] th{ background:#1b1f3b; color:#e5e7eb; border-color:#2a2f55 }
+    body[data-theme="evening"] td{ border-color:#2a2f55; color:#e5e7eb }
+
+    .right{text-align:right} .center{text-align:center}
+
+    .footer-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:12px }
+    .hint{ font-size:12px; color:var(--muted) }
+  
+    /* --- Buttons polish overrides --- */
+    .btn{ appearance:none; border:1px solid var(--line); border-radius:14px; padding:12px 16px; cursor:pointer; font-weight:700; background:#fff; transition:all .15s ease; box-shadow:0 2px 0 rgba(0,0,0,.04) }
+    .btn:hover{ transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,.08) }
+    .btn:active{ transform:translateY(0); box-shadow:0 2px 0 rgba(0,0,0,.04) }
+    .btn:focus-visible{ outline:0; box-shadow:0 0 0 3px rgba(29,78,216,.25) }
+    .btn[disabled]{ opacity:.6; cursor:not-allowed }
+
+    .btn-primary{ background:var(--brand); color:#fff; border-color:transparent; box-shadow:0 6px 14px rgba(29,78,216,.25) }
+    .btn-primary:hover{ filter:brightness(1.04) }
+    body[data-theme="evening"] .btn-primary{ box-shadow:0 6px 14px rgba(29,78,216,.35) }
+
+    .btn-ghost{ background:transparent; border:1px solid var(--line); color:inherit }
+    .btn-ghost:hover{ background:rgba(0,0,0,.03) }
+    body[data-theme="evening"] .btn-ghost{ border-color:rgba(255,255,255,.12); color:#e5e7eb }
+    body[data-theme="evening"] .btn-ghost:hover{ background:rgba(255,255,255,.06) }
+
+    .btn-danger{ background:var(--danger); color:#fff; border-color:transparent; box-shadow:0 6px 14px rgba(220,38,38,.25) }
+    .btn-danger:hover{ filter:brightness(1.04) }
+
+    .btn-sm{ padding:6px 10px; font-size:12px; border-radius:10px }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h2 style="margin:0 0 12px 0">مولّد تقرير الجولات (ReportLab A4/RTL)</h2>
+  <div class="sky">
+    <div class="sun" aria-hidden="true"></div>
+    <div class="stars" aria-hidden="true"></div>
+  </div>
 
-    <div class="card" style="margin-bottom:12px">
-      <strong>إضافة المعلمات المتغيبات</strong>
-      <div class="grid grid-3" style="margin-top:10px">
+  <div class="wrap">
+    <header class="header">
+      <h1 class="title">صانع تقارير الجولات</h1>
+      <div id="greet" class="greet"></div>
+    </header>
+
+    <section class="panel" style="margin-bottom:12px">
+      <div class="grid grid-3">
         <div>
           <label>اسم المعلمة</label>
           <input id="tName" type="text" placeholder="مثال: أمل الشريف" />
@@ -51,7 +148,7 @@
         </div>
       </div>
 
-      <table id="tbl">
+      <table id="tbl" aria-label="جدول المعلمات المتغيبات">
         <thead>
           <tr>
             <th style="width:60px">م</th>
@@ -63,18 +160,54 @@
         <tbody></tbody>
       </table>
 
-      <div class="hint" style="margin-top:8px">اليوم والتاريخ يُولَّدان تلقائيًا داخل الـ PDF — لا حاجة لأي إدخال.</div>
-    </div>
-
-    <div class="actions" style="justify-content:space-between">
-      <div class="hint">سيُنشئ الخادم PDF باستخدام ReportLab بمقاس A4 ودعم RTL.</div>
-      <div>
-        <button class="btn btn-primary" id="export">تصدير PDF</button>
+      <div class="footer-actions">
+        <div class="hint">اليوم والتاريخ تُولَّد تلقائيًا داخل ملف الـ PDF.</div>
+        <div class="actions">
+          <button class="btn btn-primary" id="export">تصدير PDF</button>
+        </div>
       </div>
-    </div>
+    </section>
   </div>
 
   <script>
+    // ---------- Theme & greeting ----------
+    (function(){
+      const now = new Date();
+      const hour = now.getHours();
+      const isMorning = hour >= 5 && hour < 17; // 5am → 4:59pm
+      document.body.setAttribute('data-theme', isMorning ? 'morning' : 'evening');
+
+      // Greeting
+      const greet = document.getElementById('greet');
+      greet.textContent = isMorning ? 'صباح الخير ابتسام ☀️' : 'مساء الخير ابتسام ✨';
+
+      // Visuals per theme
+      const sun = document.querySelector('.sun');
+      const starsLayer = document.querySelector('.stars');
+      if(isMorning){
+        sun.style.display = 'block';
+        starsLayer.innerHTML = '';
+      } else {
+        sun.style.display = 'none';
+        // generate simple stars
+        const count = 80;
+        const frag = document.createDocumentFragment();
+        for(let i=0;i<count;i++){
+          const s = document.createElement('div');
+          s.className = 'star';
+          s.style.left = Math.random()*100 + 'vw';
+          s.style.top  = Math.random()*100 + 'vh';
+          s.style.opacity = (0.6 + Math.random()*0.4).toFixed(2);
+          const size = Math.random()*.12 + 1.4; // 1.4px to 1.52px
+          s.style.width = size + 'px';
+          s.style.height = size + 'px';
+          frag.appendChild(s);
+        }
+        starsLayer.appendChild(frag);
+      }
+    })();
+
+    // ---------- App logic ----------
     const $ = (s)=>document.querySelector(s);
     const $$ = (s)=>Array.from(document.querySelectorAll(s));
 
