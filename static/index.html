@@ -6,187 +6,199 @@
   <title>صانع تقارير الجولات</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <!-- صفحة تستخدم Cairo للنصوص العامة، والأزرار Tajawal -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Tajawal:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    /* ===== أساسيات (Mobile‑first) ===== */
     :root{
-      --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#f8fafc; --card:#ffffff;
-      --brand:#3b82f6; --ok:#10b981; --danger:#ef4444; --chip:#eef2ff; --chipText:#1e3a8a;
-      --shadow:0 10px 24px rgba(0,0,0,.06);
-      --radius:14px;
+      --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --card:#ffffff;
+      --ok:#16a34a; --ok-press:#15803d; --bg:#f8fafc; --chip:#f1f5f9;
+      --sun:#fff7ed; --sky:#e0f2fe; --night:#0b1020; --vio:#1f1240; --star:#e5e7eb;
     }
-    *,*::before,*::after{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;font-family:'Cairo',system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink);}
+    *{box-sizing:border-box}
+    body{margin:0; font-family:'Cairo', system-ui, Segoe UI, Arial, sans-serif; background:var(--bg); color:var(--ink)}
+    .wrap{max-width:880px; margin-inline:auto; padding:16px;}
 
-    /* خلفية صباح/مساء هادئة */
-    body[data-theme="morning"]{background:linear-gradient(180deg,#e0f2ff,#f8fbff)}
-    body[data-theme="evening"]{background:linear-gradient(180deg,#0b1020,#1c1530);color:#eef2ff}
-    body[data-theme="evening"] .card{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
-    body[data-theme="evening"] .muted{color:#c7d2fe}
+    /* خلفية صباح/مساء */
+    .hero{border-radius:16px; padding:18px; margin:10px 0 16px; position:relative; overflow:hidden}
+    .hero.morning{background:linear-gradient(180deg, var(--sky), #ffffff)}
+    .hero.morning:after{content:""; position:absolute; inset:auto 18px  -24px auto; width:120px; height:120px; background:radial-gradient(circle,#ffe8a3,#ffd67a); border-radius:50%; opacity:.7}
+    .hero.evening{background:linear-gradient(180deg, var(--vio), var(--night)); color:#fff}
+    .hero.evening .sub{color:#c7d2fe}
+    .hero.evening:after{content:""; position:absolute; inset:8px 12px auto auto; width:2px; height:2px; background:transparent; box-shadow: 0 0 0 0 #000,
+        12px 8px 0 0 var(--star), 24px 10px 0 0 var(--star), 36px 6px 0 0 var(--star), 48px 12px 0 0 var(--star), 60px 9px 0 0 var(--star);
+    }
+    h1{margin:0 0 6px; font-size:20px}
+    .sub{margin:0; font-size:14px; color:var(--muted)}
 
-    .page{max-width:680px; margin-inline:auto; padding:16px 14px 24px}
-    h1{margin:10px 0 4px; font-size:clamp(22px, 4vw, 28px)}
-    .muted{color:var(--muted)}
+    .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px;}
+    .grid{display:grid; gap:10px}
+    @media (min-width:680px){ .grid-3{ grid-template-columns: repeat(3, 1fr); } }
 
-    .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow)}
+    label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px}
+    input[type="text"], textarea{
+      width:100%; border:1px solid var(--line); border-radius:10px; padding:10px; font:inherit; background:#fff;
+    }
+    textarea{min-height:88px; resize:vertical}
 
-    /* صف الإدخال (Mobile‑first: عمود واحد) */
-    .row{display:grid; grid-template-columns:1fr; gap:10px}
-    @media (min-width:560px){ .row{grid-template-columns:1fr 1fr auto} }
+    .day{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px}
+    .day h3{margin:0 0 8px; font-size:16px}
+    .muted{color:var(--muted); font-size:12px}
 
-    label{font-size:14px; color:var(--muted); margin-bottom:6px; display:block}
-    input[type="text"]{width:100%; padding:14px; border:1px solid var(--line); border-radius:12px; font:inherit}
-
-    /* أزرار: توحيد الخط = نفس خط الصفحة */
-    .btn{appearance:none; border:0; border-radius:12px; padding:14px 16px; cursor:pointer; font-family:inherit; font-weight:700; line-height:1; 
-         transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease; min-height:48px;}
-    .btn:active{transform:translateY(1px)}
+    .actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:space-between; align-items:center}
+    .btn{appearance:none; border:0; border-radius:12px; padding:12px 16px; cursor:pointer; font-weight:700; font-family:'Tajawal', system-ui, Arial, sans-serif}
+    .btn-primary{background:var(--ok); color:#fff}
+    .btn-primary:active{background:var(--ok-press)}
     .btn-ghost{background:#fff; border:1px solid var(--line)}
-    .btn-primary{background:var(--brand); color:#fff; box-shadow:0 8px 18px rgba(59,130,246,.22)}
-    /* زر التصدير المطلوب: أخضر */
-    .btn-success{background:var(--ok); color:#fff; box-shadow:0 8px 18px rgba(16,185,129,.22)}
-    .btn-danger{background:var(--danger); color:#fff}
-    body[data-theme="evening"] .btn-ghost{background:transparent; color:#eef2ff; border-color:rgba(255,255,255,.12)}
 
-    .list{margin-top:12px; display:grid; gap:8px}
-    .item{display:flex; gap:10px; align-items:center; justify-content:space-between; border:1px dashed var(--line); border-radius:12px; padding:12px; background:#fff}
-    body[data-theme="evening"] .item{background:rgba(255,255,255,.04)}
-    .item b{font-weight:700}
-    .item small{color:var(--muted)}
-
-    .footer-actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-top:14px}
-    .hint{font-size:13px}
-
-    .chip{display:inline-flex; align-items:center; gap:8px; background:var(--chip); color:var(--chipText); padding:8px 12px; border-radius:999px; font-size:13px}
-    body[data-theme="evening"] .chip{background:#312e81; color:#c7d2fe}
-
-    .hero{margin:8px 0 14px}
+    /* تحسينات موبايل */
+    @media (max-width:420px){ h1{font-size:18px} .btn{width:100%} }
   </style>
 </head>
 <body>
-  <div class="page">
-    <h1>صانع تقارير الجولات</h1>
-    <div class="hero muted" id="greet"></div>
+  <div class="wrap">
+    <section id="hero" class="hero">
+      <h1 id="heroTitle">صانع تقارير الجولات</h1>
+      <p class="sub" id="heroSub">مرحباً بك</p>
+    </section>
 
-    <div class="card">
-      <div class="row">
+    <section class="card" style="margin-bottom:10px">
+      <h2 style="margin:0 0 10px; font-size:16px">البيانات الأساسية</h2>
+      <div class="grid grid-3">
         <div>
-          <label>اسم المعلمة</label>
-          <input id="tName" type="text" placeholder="مثال: أمل الشريف" />
+          <label>الحصة</label>
+          <input id="period" type="text" placeholder="مثال: الرابعة" />
         </div>
         <div>
-          <label>سبب عدم الحضور</label>
-          <input id="tReason" type="text" placeholder="مثال: انقطاع الإنترنت" />
+          <label>الأسبوع</label>
+          <input id="week" type="text" placeholder="مثال: السابع" />
         </div>
-        <div style="display:flex;gap:8px;align-items:flex-end;justify-content:flex-end">
-          <button class="btn btn-primary" id="addRow">+ إضافة</button>
+        <div>
+          <label>الفصل الدراسي</label>
+          <input id="term" type="text" placeholder="مثال: الأول" />
+        </div>
+      </div>
+      <p class="muted" style="margin-top:6px">اسم الإدارية: <strong>ابتسام قاسم الفيفي</strong> (يُملأ تلقائياً في التقرير)</p>
+    </section>
+
+    <section class="grid" style="margin-bottom:12px">
+      <div class="day">
+        <h3>الأحد</h3>
+        <div class="grid">
+          <div>
+            <label>الفصل</label>
+            <input id="sun_class" type="text" placeholder="مثال: 3/ب" />
+          </div>
+          <div>
+            <label>متابعة الجولة</label>
+            <textarea id="sun_follow" placeholder="ماذا تمت متابعته؟"></textarea>
+          </div>
+          <div>
+            <label>ملاحظات</label>
+            <textarea id="sun_note" placeholder="ملاحظات إضافية"></textarea>
+          </div>
         </div>
       </div>
 
-      <div class="list" id="list"></div>
-
-      <div class="footer-actions">
-        <span class="chip" id="count">لا توجد متغيبات</span>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-ghost" id="clear">مسح الكل</button>
-          <button class="btn btn-success" id="export">تصدير التقرير الآن</button>
+      <div class="day">
+        <h3>الإثنين</h3>
+        <div class="grid">
+          <div>
+            <label>الفصل</label>
+            <input id="mon_class" type="text" />
+          </div>
+          <div>
+            <label>متابعة الجولة</label>
+            <textarea id="mon_follow"></textarea>
+          </div>
+          <div>
+            <label>ملاحظات</label>
+            <textarea id="mon_note"></textarea>
+          </div>
         </div>
       </div>
-      <div class="hint muted" style="margin-top:6px">اليوم والتاريخ تُملأ تلقائيًا داخل الـ PDF. يمكنك التصدير بدون إضافة أسماء.</div>
+
+      <div class="day">
+        <h3>الثلاثاء</h3>
+        <div class="grid">
+          <div>
+            <label>الفصل</label>
+            <input id="tue_class" type="text" />
+          </div>
+          <div>
+            <label>متابعة الجولة</label>
+            <textarea id="tue_follow"></textarea>
+          </div>
+          <div>
+            <label>ملاحظات</label>
+            <textarea id="tue_note"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="actions">
+      <span class="muted">سيتم تعيين التواريخ تلقائياً (الأحد → الثلاثاء من الأسبوع الحالي).</span>
+      <button class="btn btn-primary" id="export">تصدير التقرير PDF</button>
     </div>
   </div>
 
   <script>
-    // تحية تلقائية + سمة صباح/مساء
+    // تحية صباح/مساء + خلفية
     (function(){
+      const hero = document.getElementById('hero');
+      const title = document.getElementById('heroTitle');
+      const sub = document.getElementById('heroSub');
       const h = new Date().getHours();
-      const morning = h >= 5 && h < 17;
-      document.body.setAttribute('data-theme', morning ? 'morning' : 'evening');
-      document.getElementById('greet').textContent = morning ? 'صباح الخير ابتسام ☀️' : 'مساء الخير ابتسام 🌙';
+      const morning = (h >= 5 && h < 17);
+      if(morning){
+        hero.classList.add('morning');
+        sub.textContent = 'صباح الخير ابتسام ☀️';
+      }else{
+        hero.classList.add('evening');
+        sub.textContent = 'مساء الخير ابتسام 🌙';
+      }
+      title.textContent = 'صانع تقارير الجولات';
     })();
 
     const $ = (s)=>document.querySelector(s);
-    const list = $('#list');
-    const tName = $('#tName');
-    const tReason = $('#tReason');
-    const countChip = $('#count');
 
-    function renderCount(){
-      const n = list.children.length;
-      countChip.textContent = n ? `عدد المتغيبات: ${n}` : 'لا توجد متغيبات';
-    }
-
-    function addRow(name, reason){
-      const el = document.createElement('div');
-      el.className = 'item';
-      el.innerHTML = `
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <b class="name"></b>
-            <small class="reason muted"></small>
-          </div>
-        </div>
-        <button class="btn btn-danger btn-sm">حذف</button>`;
-      el.querySelector('.name').textContent = name;
-      el.querySelector('.reason').textContent = `— ${reason}`;
-      el.querySelector('button').onclick = ()=>{ el.remove(); renderCount(); };
-      list.appendChild(el);
-      renderCount();
-    }
-
-    function tryAdd(){
-      const name = tName.value.trim();
-      const reason = tReason.value.trim();
-      if(!name || !reason){
-        // تبسيط: من دون تنبيه مزعج — نوجه التركيز
-        if(!name) tName.focus(); else tReason.focus();
-        return;
-      }
-      addRow(name, reason);
-      tName.value = '';
-      tReason.value = '';
-      tName.focus();
-    }
-
-    $('#addRow').onclick = tryAdd;
-    tReason.addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryAdd(); });
-    tName.addEventListener('keydown', (e)=>{ if(e.key==='Enter') tReason.focus(); });
-
-    $('#clear').onclick = ()=>{
-      if(!list.children.length) return;
-      if(confirm('مسح جميع المتغيبات؟')){ list.innerHTML=''; renderCount(); }
-    };
-
-    $('#export').onclick = async ()=>{
-      const rows = Array.from(list.children).map((el)=>({
-        name: el.querySelector('.name').textContent.trim(),
-        reason: el.querySelector('.reason').textContent.replace(/^—\s*/, '').trim(),
-      }));
-
+    $('#export').onclick = async () => {
       const fd = new FormData();
-      fd.append('rows_json', JSON.stringify(rows));
+      fd.append('period', $('#period').value.trim());
+      fd.append('week', $('#week').value.trim());
+      fd.append('term', $('#term').value.trim());
+
+      fd.append('sun_class',  $('#sun_class').value.trim());
+      fd.append('sun_follow', $('#sun_follow').value.trim());
+      fd.append('sun_note',   $('#sun_note').value.trim());
+
+      fd.append('mon_class',  $('#mon_class').value.trim());
+      fd.append('mon_follow', $('#mon_follow').value.trim());
+      fd.append('mon_note',   $('#mon_note').value.trim());
+
+      fd.append('tue_class',  $('#tue_class').value.trim());
+      fd.append('tue_follow', $('#tue_follow').value.trim());
+      fd.append('tue_note',   $('#tue_note').value.trim());
 
       const btn = $('#export');
-      const label = btn.textContent;
-      btn.disabled = true; btn.textContent = 'جارٍ إنشاء التقرير…';
-
-      // دعم التشغيل من :3000 أو :8000
-      const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') && (location.port === '3000')
-        ? 'http://127.0.0.1:8000' : '';
-
+      btn.disabled = true; const prev = btn.textContent; btn.textContent = 'جارٍ إنشاء PDF...';
       try{
-        const res = await fetch(`${API_BASE}/api/pdf`, { method:'POST', body: fd });
-        if(!res.ok){ throw new Error(await res.text()); }
+        const res = await fetch('/api/pdf', { method:'POST', body: fd });
+        if(!res.ok){
+          alert('فشل إنشاء PDF');
+          return;
+        }
         const blob = await res.blob();
-        const a = document.createElement('a');
         const url = URL.createObjectURL(blob);
-        a.href = url; a.download = `تقرير_الجولات_${Date.now()}.pdf`;
-        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `تقرير_الجولات_${Date.now()}.pdf`;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
       }catch(e){
-        alert('تعذر إنشاء PDF');
+        alert('تعذر الاتصال بالخادم');
       }finally{
-        btn.disabled = false; btn.textContent = label;
+        btn.disabled = false; btn.textContent = prev;
       }
     };
   </script>
